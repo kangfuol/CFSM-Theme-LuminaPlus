@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import type uPlot from "uplot";
 import {
+  axisDecimals,
   buildLoadTimeRangeOptions,
   buildPingTimeRangeOptions,
   SPARSE_SERIES_POINTS,
@@ -89,5 +90,21 @@ describe("sparse series points", () => {
     expect(filter(fakePlot(times, values, [0, 600]), 1, false)).toEqual([3]);
     // 「断点连线」开着时线会接上，不用补点。
     expect(filter(fakePlot(times, values, [0, 600], true), 1, false)).toBeNull();
+  });
+});
+
+describe("axis tick decimals", () => {
+  it("uses as few decimals as the ticks need", () => {
+    expect(axisDecimals([0, 50, 100])).toBe(0);
+    expect(axisDecimals([0, 0.5, 1, 1.5])).toBe(1);
+    expect(axisDecimals([0, 0.25, 0.5])).toBe(2);
+  });
+
+  it("keeps tiny load values apart instead of printing 0.0 twice", () => {
+    // 站长 2026-10-15：负载只有 0.01~0.02 时两条刻度都是「0.0」。
+    const decimals = axisDecimals([0, 0.01, 0.02]);
+    expect(decimals).toBe(2);
+    expect([0.01, 0.02].map((v) => v.toFixed(decimals))).toEqual(["0.01", "0.02"]);
+    expect(axisDecimals([0, 0.005, 0.01])).toBe(3);
   });
 });

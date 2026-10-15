@@ -19,6 +19,7 @@ import { InstancePanel, InstanceChartLoading } from "./InstancePanel";
 import {
   buildChartTooltipHooks,
   SPARSE_SERIES_POINTS,
+  axisDecimals,
   chartAlpha,
   createTimeAxisFormatter,
   formatChartCoverageTime,
@@ -230,13 +231,6 @@ function formatTooltipValue(key: string, value: number | null | undefined, unit:
   return value.toFixed(2);
 }
 
-function formatPercentAxisValue(value: number, min: number, max: number) {
-  const span = Math.abs(max - min);
-  if (span < 0.5) return `${value.toFixed(2)}%`;
-  if (span < 5) return `${value.toFixed(1)}%`;
-  return `${Math.round(value)}%`;
-}
-
 function formatNetworkAxisValue(value: number) {
   if (!Number.isFinite(value) || value <= 0) return "";
   return formatTrafficRateLabel(value);
@@ -247,11 +241,6 @@ function formatByteRateAxisValue(value: number) {
   return formatByteRateLabel(value);
 }
 
-function formatCountAxisValue(value: number, min: number, max: number) {
-  const span = Math.abs(max - min);
-  if (span < 10) return value.toFixed(1);
-  return `${Math.round(value)}`;
-}
 
 /**
  * 负载图表用样条曲线，和后端内置主题一个观感（站长 2026-09-21 提的）。
@@ -336,15 +325,14 @@ function buildBaseOptions({
         grid: { stroke: grid, width: 1 },
         ticks: { stroke: grid },
         size: LOAD_Y_AXIS_SIZE,
-        values: (self, splits) => {
-          const min = Number(self.scales.y.min ?? 0);
-          const max = Number(self.scales.y.max ?? 0);
+        values: (_self, splits) => {
+          const decimals = axisDecimals(splits);
           return splits.map((value) => {
             if (value === 0 && axisKind !== "percent") return "";
             if (axisKind === "network") return formatNetworkAxisValue(value);
             if (axisKind === "byteRate") return formatByteRateAxisValue(value);
-            if (axisKind === "percent") return formatPercentAxisValue(value, min, max);
-            return formatCountAxisValue(value, min, max);
+            if (axisKind === "percent") return `${value.toFixed(decimals)}%`;
+            return value.toFixed(decimals);
           });
         },
       },

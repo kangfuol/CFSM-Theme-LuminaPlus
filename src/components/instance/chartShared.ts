@@ -27,6 +27,20 @@ export function chartAlpha(color: string, alpha: number): string {
   return rgb ? `rgba(${rgb[0]}, ${rgb[1]}, ${rgb[2]}, ${alpha})` : color;
 }
 
+/**
+ * 刻度要几位小数：能把每个刻度值原样写出来的最少位数（最多 3 位）。原来按纵轴跨度粗分档，
+ * 负载只有 0.01~0.02 时两条刻度都写成「0.0」（站长 2026-10-15 截图）。
+ */
+export function axisDecimals(splits: number[]): number {
+  for (let decimals = 0; decimals < 3; decimals += 1) {
+    const factor = 10 ** decimals;
+    if (splits.every((value) => Math.abs(Math.round(value * factor) / factor - value) < 1e-9)) {
+      return decimals;
+    }
+  }
+  return 3;
+}
+
 // 备用定性色板（仅缺少总数时用）；正常走下面的 OKLCH 生成。
 const CHART_SERIES_COLORS = [
   "#4878d0", // 蓝
