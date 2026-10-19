@@ -258,6 +258,13 @@ const SPLINE_PATHS = uPlot.paths.spline?.();
  */
 const LOAD_Y_AXIS_SIZE = 78;
 
+/** 纵轴范围：下限固定 0，上限取数据最大值留一点余量并取整；全是 0 或没数据时给 0~1。百分比不超过 100。 */
+function zeroBasedYRange(max: number | null, isPercent: boolean): uPlot.Range.MinMax {
+  const top = max != null && Number.isFinite(max) && max > 0 ? max : 1;
+  const padded = uPlot.rangeNum(0, top, 0.1, true)[1] ?? top;
+  return [0, isPercent && top <= 100 ? Math.min(padded, 100) : padded];
+}
+
 /** 整数轴可用的刻度步长（uPlot 从里面挑最小的、刻度不挤的那个）。 */
 const INTEGER_AXIS_INCRS = [1, 2, 5, 10, 20, 25, 50, 100, 200, 250, 500, 1_000, 2_000, 2_500, 5_000, 10_000, 20_000, 50_000, 100_000];
 
@@ -313,7 +320,12 @@ function buildBaseOptions({
       x: getXRange
         ? { time: true, auto: false, range: (_self, min, max) => getXRange() ?? [min, max] }
         : { time: true },
-      y: { auto: true },
+      // 纵轴一律从 0 起（和 Ping 图一样，站长 2026-10-19）：原来按数据上下限自动取，
+      // 负载 0.3~0.6、连接数 10~15 这种小波动会被拉满整个图高，看着像大起大落。
+      y: {
+        auto: true,
+        range: (_self, _min, max) => zeroBasedYRange(max, axisKind === "percent"),
+      },
     },
     axes: [
       {
