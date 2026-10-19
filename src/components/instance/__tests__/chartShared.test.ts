@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import type uPlot from "uplot";
 import {
   axisDecimals,
+  zeroBasedTicks,
   buildLoadTimeRangeOptions,
   buildPingTimeRangeOptions,
   SPARSE_SERIES_POINTS,
@@ -108,3 +109,34 @@ describe("axis tick decimals", () => {
     expect(axisDecimals([0, 0.005, 0.01])).toBe(3);
   });
 });
+
+describe("zero-based axis ticks", () => {
+  const aboveZero = (ticks: number[]) => ticks.filter((value) => value > 0).length;
+
+  it("always shows at least two ticks above zero", () => {
+    // 站长 2026-10-19：网络图只有「16 Mbps」、连接数只有「100」一个刻度。
+    for (const max of [0.66, 1.1, 4.7, 17, 56, 130, 3_400_000]) {
+      expect(aboveZero(zeroBasedTicks(max))).toBeGreaterThanOrEqual(2);
+      expect(aboveZero(zeroBasedTicks(max))).toBeLessThanOrEqual(4);
+    }
+  });
+
+  it("keeps integer axes on whole numbers", () => {
+    expect(zeroBasedTicks(2, { integer: true })).toEqual([0, 1, 2]);
+    expect(zeroBasedTicks(130, { integer: true })).toEqual([0, 50, 100]);
+    expect(zeroBasedTicks(17, { integer: true }).every(Number.isInteger)).toBe(true);
+  });
+
+  it("rounds network ticks in bits and disk IO ticks in 1024 units", () => {
+    // 3.4 MB/s ≈ 27 Mbps：刻度落在 10 / 20 Mbps（字节值 × 8 是整数）。
+    expect(zeroBasedTicks(3_400_000, { unit: "bits" }).map((v) => v * 8)).toEqual([0, 10_000_000, 20_000_000]);
+    // 60 KiB/s：刻度落在 25 / 50 KiB/s。
+    expect(zeroBasedTicks(60 * 1024, { unit: "binary" }).map((v) => v / 1024)).toEqual([0, 25, 50]);
+  });
+
+  it("falls back to a lone zero when there is nothing to scale", () => {
+    expect(zeroBasedTicks(0)).toEqual([0]);
+    expect(zeroBasedTicks(Number.NaN)).toEqual([0]);
+  });
+});
+

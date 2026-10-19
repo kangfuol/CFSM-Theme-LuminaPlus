@@ -41,6 +41,43 @@ export function axisDecimals(splits: number[]): number {
   return 3;
 }
 
+/** 1 / 2 / 2.5 / 5 × 10ⁿ 里不超过 limit 的最大值；整数轴跳过非整数（最小 1）。 */
+function niceStepAtMost(limit: number, integer: boolean): number {
+  if (!(limit > 0)) return integer ? 1 : 0;
+  const base = 10 ** Math.floor(Math.log10(limit));
+  for (const mult of [5, 2.5, 2, 1]) {
+    const step = mult * base;
+    if (step <= limit * (1 + 1e-9) && (!integer || Number.isInteger(step))) return step;
+  }
+  return integer ? 1 : base;
+}
+
+/** 刻度值按什么单位取整：普通十进制、网速（按比特显示的十进制）、字节速率（1024 进制）。 */
+export type AxisTickUnit = "decimal" | "bits" | "binary";
+
+/**
+ * 从 0 起的纵轴刻度，0 以上至少两档（站长 2026-10-19：网络、连接数图上只有一个刻度，看不出量级）。
+ * 步长取不超过 max / 2 的「好看」数，所以 0 以上总有 2~4 档；网速按比特、磁盘 IO 按 1024 取整，
+ * 刻度文字才会是 10 Mbps、25 KB/s 这样的整数。
+ */
+export function zeroBasedTicks(
+  max: number,
+  { integer = false, unit = "decimal" }: { integer?: boolean; unit?: AxisTickUnit } = {},
+): number[] {
+  if (!(max > 0) || !Number.isFinite(max)) return [0];
+  let scale = 1;
+  if (unit === "bits") scale = 8;
+  if (unit === "binary") scale = 1 / 1024 ** Math.max(0, Math.floor(Math.log(max) / Math.log(1024)));
+  const top = max * scale;
+  const step = niceStepAtMost(top / 2, integer);
+  if (!(step > 0)) return [0];
+  const ticks: number[] = [];
+  for (let index = 0; index * step <= top * (1 + 1e-9); index += 1) {
+    ticks.push((index * step) / scale);
+  }
+  return ticks;
+}
+
 // 备用定性色板（仅缺少总数时用）；正常走下面的 OKLCH 生成。
 const CHART_SERIES_COLORS = [
   "#4878d0", // 蓝
