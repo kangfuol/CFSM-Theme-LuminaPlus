@@ -401,8 +401,9 @@ const MiniHealth = memo(function MiniHealth({
         <div className="mini-node-health-head">
           <span className="mini-node-health-label">
             <Clock3 size={12} strokeWidth={2} />
-            {t("card.latency")}
-            <SingleLineName uuid={uuid} />
+            {/* 只留图标和线路名，「延迟」「丢包」两个字不写（站长 2026-10-21），给读屏留着。 */}
+            <span className="sr-only">{t("card.latency")}</span>
+            <SingleLineName uuid={uuid} separator={false} />
           </span>
           <strong className="mini-node-health-value tabular" style={{ color: latencyColor }}>
             {ping.lastValue != null ? (
@@ -421,7 +422,7 @@ const MiniHealth = memo(function MiniHealth({
         <div className="mini-node-health-head">
           <span className="mini-node-health-label">
             <Unplug size={12} strokeWidth={2} />
-            {t("card.loss")}
+            <span className="sr-only">{t("card.loss")}</span>
           </span>
           <strong className="mini-node-health-value tabular" style={{ color: lossColor }}>
             {ping.loss != null ? (

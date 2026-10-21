@@ -466,8 +466,9 @@ const NodeHealthSection = memo(function NodeHealthSection({
         <div className="server-health-head">
           <div className="server-health-label">
             <Clock3 size={13} strokeWidth={2} />
-            <span>{t("card.latency")}</span>
-            <SingleLineName uuid={uuid} />
+            {/* 只留图标和线路名，「延迟」「丢包」两个字不写（站长 2026-10-21），给读屏留着。 */}
+            <span className="sr-only">{t("card.latency")}</span>
+            <SingleLineName uuid={uuid} separator={false} />
           </div>
           <span
             className="server-health-value tabular"
@@ -511,7 +512,7 @@ const NodeHealthSection = memo(function NodeHealthSection({
         <div className="server-health-head">
           <div className="server-health-label">
             <Unplug size={13} strokeWidth={2} />
-            <span>{t("card.lossRate")}</span>
+            <span className="sr-only">{t("card.lossRate")}</span>
           </div>
           <span
             className="server-health-value tabular"

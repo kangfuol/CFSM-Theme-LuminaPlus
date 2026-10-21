@@ -681,8 +681,9 @@ const CompactNodeHealth = memo(function CompactNodeHealth({
         icon={<Clock3 size={12} />}
         label={
           <>
-            {t("card.latency")}
-            <SingleLineName uuid={uuid} />
+            {/* 只留图标和线路名，「延迟」「丢包」两个字不写（站长 2026-10-21），给读屏留着。 */}
+            <span className="sr-only">{t("card.latency")}</span>
+            <SingleLineName uuid={uuid} separator={false} />
           </>
         }
         value={ping.lastValue != null ? Math.round(ping.lastValue).toString() : emptyText}
@@ -693,7 +694,7 @@ const CompactNodeHealth = memo(function CompactNodeHealth({
       </CompactHealthItem>
       <CompactHealthItem
         icon={<Unplug size={12} />}
-        label={t("card.loss")}
+        label={<span className="sr-only">{t("card.loss")}</span>}
         value={ping.loss != null ? ping.loss.toFixed(1) : emptyText}
         unit={ping.loss != null ? "%" : undefined}
         color={lossColor}

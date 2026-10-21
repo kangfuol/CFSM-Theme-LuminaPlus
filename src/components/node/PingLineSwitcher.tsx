@@ -108,14 +108,23 @@ export function PingLineSwitcher({
  * 单线路时跟在「延迟」后面的线路名，点开同样能换线路（站长 2026-10-21，issue #9：关掉三网详情后
  * 只剩一条线路，看不出这个延迟是哪条线路的）。单线路模式的大卡 / 小卡、以及一直只画一条的迷你卡、列表都用它。
  */
-export function SingleLineName({ uuid }: { uuid: string }) {
+export function SingleLineName({
+  uuid,
+  separator = true,
+}: {
+  uuid: string;
+  /** 前面紧跟着别的字（列表里的「33 ms」）时用「·」隔开；卡片上前面只有图标，不要。 */
+  separator?: boolean;
+}) {
   const taskId = useSelectedTaskId(uuid);
   const carrierNames = useCarrierNames();
   return (
     <span className="single-ping-line">
-      <span className="single-ping-sep" aria-hidden>
-        ·
-      </span>
+      {separator && (
+        <span className="single-ping-sep" aria-hidden>
+          ·
+        </span>
+      )}
       <PingLineSwitcher
         uuid={uuid}
         slot="single"
