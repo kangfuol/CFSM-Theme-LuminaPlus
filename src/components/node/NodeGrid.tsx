@@ -314,7 +314,7 @@ function GroupTabs({
 }) {
   // 和地区栏一样可以直接拖动排序（「全部」固定在最前，不参与）。
   const { containerRef, order, draggingCode, itemRef, itemHandlers, shouldIgnoreClick } =
-    useDragReorder({ codes: groups, onReorder });
+    useDragReorder({ codes: groups, onReorder, axis: "x" });
   const [spanStyle, setSpanStyle] = useState<CSSProperties | undefined>(undefined);
 
   // 分组栏平时占一张卡的宽度、和第一张卡左右对齐；分组多到这一格放不下时，往右伸到排序按钮前为止

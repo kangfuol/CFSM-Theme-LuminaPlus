@@ -77,11 +77,18 @@ function reconcileOrder(order: readonly string[], codes: readonly string[]): str
 export function useDragReorder({
   codes,
   onReorder,
+  axis = "both",
 }: {
   /** 当前显示的顺序（就是存下来的顺序）。 */
   codes: readonly string[];
   /** 拖完、且顺序真的变了才调，参数是拖完后的全部代码；不传就不能拖。 */
   onReorder?: (codes: string[]) => void;
+  /**
+   * 拖动中的标签能往哪个方向跟着指针走。地区栏会换行，要上下左右都能走；分组栏只有一行、
+   * 而且是横向滚动的容器（会把上下伸出去的部分裁掉），只跟着横向走，不然手一偏标签就被裁没了
+   * （站长 2026-10-22：「拖动的时候看不到选中的标签」）。
+   */
+  axis?: "x" | "both";
 }) {
   const containerRef = useRef<HTMLDivElement>(null);
   const itemRefs = useRef(new Map<string, HTMLElement>());
@@ -97,9 +104,9 @@ export function useDragReorder({
   );
 
   // 指针事件挂在 window 上、只在按下时装一次，读到的必须是最新值，所以经 ref 转一道。
-  const latestRef = useRef({ order, codes, onReorder });
+  const latestRef = useRef({ order, codes, onReorder, axis });
   useLayoutEffect(() => {
-    latestRef.current = { order, codes, onReorder };
+    latestRef.current = { order, codes, onReorder, axis };
   });
 
   const controller = useMemo(() => {
@@ -130,8 +137,21 @@ export function useDragReorder({
       const el = drag ? itemRefs.current.get(drag.code) : undefined;
       if (!drag || !container || !el) return;
       const origin = contentOrigin(container);
-      const dx = drag.x - drag.grabX - (origin.x + el.offsetLeft);
-      const dy = drag.y - drag.grabY - (origin.y + el.offsetTop);
+      let left = drag.x - drag.grabX;
+      if (latestRef.current.axis === "x") {
+        // 横向也夹在容器可见范围里：伸出去同样会被裁掉。
+        // 左边最多到第一个可拖标签的位置：前面不参与排序的标签（分组栏的「全部」）不让盖住。
+        const box = container.getBoundingClientRect();
+        const firstItemLeft = Math.min(
+          ...Array.from(itemRefs.current.values(), (item) => origin.x + item.offsetLeft),
+        );
+        const minLeft = Math.max(box.left + container.clientLeft, firstItemLeft);
+        const maxLeft = box.left + container.clientLeft + container.clientWidth - el.offsetWidth;
+        left = Math.min(Math.max(left, minLeft), Math.max(minLeft, maxLeft));
+      }
+      const dx = left - (origin.x + el.offsetLeft);
+      const dy =
+        latestRef.current.axis === "x" ? 0 : drag.y - drag.grabY - (origin.y + el.offsetTop);
       el.style.transform = `translate3d(${dx}px, ${dy}px, 0)`;
     };
 
@@ -154,8 +174,17 @@ export function useDragReorder({
       if (from === -1) return;
 
       const origin = contentOrigin(container);
-      const centerX = drag.x - drag.grabX + el.offsetWidth / 2;
-      const centerY = drag.y - drag.grabY + el.offsetHeight / 2;
+      // 和 positionDragged 一样按画出来的位置算（横向被夹住时以夹住后的位置为准）。
+      const shown = el.getBoundingClientRect();
+      const centerX =
+        latestRef.current.axis === "x"
+          ? shown.left + shown.width / 2
+          : drag.x - drag.grabX + el.offsetWidth / 2;
+      // 只横着走时竖直方向按标签自己那一行算，手上下偏一点不影响换位。
+      const centerY =
+        latestRef.current.axis === "x"
+          ? origin.y + el.offsetTop + el.offsetHeight / 2
+          : drag.y - drag.grabY + el.offsetHeight / 2;
       const distanceTo = (item: HTMLElement) =>
         Math.hypot(
           centerX - (origin.x + item.offsetLeft + item.offsetWidth / 2),
