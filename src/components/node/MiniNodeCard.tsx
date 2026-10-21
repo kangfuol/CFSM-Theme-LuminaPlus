@@ -17,6 +17,7 @@ import { Flag } from "@/components/ui/Flag";
 import { OsLogo } from "@/components/ui/OsLogo";
 import { IpStackBadges } from "./IpStackBadges";
 import { HealthBucketTooltip } from "./HealthBucketTooltip";
+import { SingleLineName } from "./PingLineSwitcher";
 import { MetricDetailTip, useMetricDetailTip } from "./MetricDetailTip";
 import { resolveTouchBucketIndex, TOUCH_BUCKET_HOLD_MS } from "./touchBucketPick";
 import { useNodeCardModel } from "@/hooks/useNodeCardModel";
@@ -363,6 +364,7 @@ function MiniHealthBars({
 
 // 延迟/丢包必显；mini 使用内联 SVG，避免每张卡创建 Canvas 与观察器。
 const MiniHealth = memo(function MiniHealth({
+  uuid,
   ping,
   pingBuckets,
   latencyColor,
@@ -371,6 +373,7 @@ const MiniHealth = memo(function MiniHealth({
   pingLoading,
   pingError,
 }: {
+  uuid: string;
   ping: PingOverviewItem;
   pingBuckets: PingOverviewBucket[];
   latencyColor: string;
@@ -399,6 +402,7 @@ const MiniHealth = memo(function MiniHealth({
           <span className="mini-node-health-label">
             <Clock3 size={12} strokeWidth={2} />
             {t("card.latency")}
+            <SingleLineName uuid={uuid} />
           </span>
           <strong className="mini-node-health-value tabular" style={{ color: latencyColor }}>
             {ping.lastValue != null ? (
@@ -477,6 +481,7 @@ export const MiniNodeCard = memo(function MiniNodeCard({
       <MiniVitals node={node} loadFraction={loadFraction} />
       <MiniFlow node={node} upRate={upRate} downRate={downRate} />
       <MiniHealth
+        uuid={uuid}
         ping={ping}
         pingBuckets={pingBuckets}
         latencyColor={latencyColor}

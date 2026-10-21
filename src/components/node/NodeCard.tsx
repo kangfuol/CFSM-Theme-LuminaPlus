@@ -40,6 +40,7 @@ import {
 } from "./nodeCardShared";
 import { IpStackBadges } from "./IpStackBadges";
 import { HealthBucketTooltip } from "./HealthBucketTooltip";
+import { SingleLineName } from "./PingLineSwitcher";
 import { MultiPingStatus } from "./MultiPingStatus";
 import { formatHealthBucketTooltip } from "./pingBucketText";
 import { clsx } from "clsx";
@@ -163,6 +164,7 @@ export const NodeCard = memo(function NodeCard({
             />
           ) : (
             <NodeHealthSection
+              uuid={uuid}
               ping={ping}
               pingBuckets={pingBuckets}
               redrawKey={redrawKey}
@@ -410,6 +412,7 @@ const NodeTrafficQuota = memo(function NodeTrafficQuota({
 // ~60s 才刷新一次 —— 所以 latency/loss 柱子这棵子树能跳过每个 tick 的工作。
 // hover 状态收在本段内(两图互斥),悬停时不再重渲整张卡。
 const NodeHealthSection = memo(function NodeHealthSection({
+  uuid,
   ping,
   pingBuckets,
   redrawKey,
@@ -420,6 +423,7 @@ const NodeHealthSection = memo(function NodeHealthSection({
   latencyColor,
   lossColor,
 }: {
+  uuid: string;
   ping: PingOverviewItem;
   pingBuckets: PingOverviewBucket[];
   redrawKey: string;
@@ -463,6 +467,7 @@ const NodeHealthSection = memo(function NodeHealthSection({
           <div className="server-health-label">
             <Clock3 size={13} strokeWidth={2} />
             <span>{t("card.latency")}</span>
+            <SingleLineName uuid={uuid} />
           </div>
           <span
             className="server-health-value tabular"

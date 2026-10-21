@@ -32,6 +32,7 @@ import type {
 import {
   nodePingLineOverrides,
   resolveNodePingLineTaskIds,
+  singleLineOverride,
   type PingLineOverrides,
   type PingLineOverridesByNode,
 } from "@/utils/pingLineOverrides";
@@ -305,15 +306,29 @@ export function withLiveLatency(
  * 节点在单线路模式下显示哪条线路：单独绑过就用绑的，否则用站点的「默认线路」设置
  * （`homepageDefaultPingTaskId`，站长没设过才是电信）。
  */
-export function useSelectedTaskId(uuid: string): number {
-  const { homepagePingBindings, homepageDefaultPingTaskId } = useThemeSettings();
+/**
+ * 这台节点单线路时的「默认」：站长在卡片上换过、存到后端的那条 → 设置页「逐节点指定线路」→ 「默认线路」。
+ * 卡片上单线路菜单的「恢复默认」回到它，本机换的也相对它记。
+ */
+export function useSiteSelectedTaskId(uuid: string): number {
+  const { homepagePingBindings, homepageDefaultPingTaskId, homepagePingLineOverrides } =
+    useThemeSettings();
+  const siteSingle = singleLineOverride(nodePingLineOverrides(homepagePingLineOverrides, uuid));
   return useMemo(() => {
     const byClient = invertHomepagePingTaskBindings(homepagePingBindings);
     return (
+      siteSingle ??
       byClient.get(uuid) ??
       resolveDefaultHomepagePingTaskId(homepageDefaultPingTaskId)
     );
-  }, [homepageDefaultPingTaskId, homepagePingBindings, uuid]);
+  }, [homepageDefaultPingTaskId, homepagePingBindings, siteSingle, uuid]);
+}
+
+/** 单线路实际画哪条：本机在卡片上换过的压过上面那份默认。 */
+export function useSelectedTaskId(uuid: string): number {
+  const siteTaskId = useSiteSelectedTaskId(uuid);
+  const localSingle = singleLineOverride(useNodePingLineOverrides(uuid));
+  return localSingle ?? siteTaskId;
 }
 
 /**

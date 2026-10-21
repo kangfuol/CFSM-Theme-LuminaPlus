@@ -10,7 +10,10 @@ import {
   normalizePingLineOverrides,
   normalizePingLineOverridesByNode,
   resolveNodePingLineTaskIds,
+  singleLineOverride,
   switchPingLine,
+  withoutMultiLineOverrides,
+  withSingleLineOverride,
 } from "@/utils/pingLineOverrides";
 import { normalizeThemeSettings } from "@/utils/themeSettings";
 
@@ -190,3 +193,37 @@ describe("mergePingLineOverridesByNode", () => {
     ).toEqual({ "node-a": { "2": 5 } });
   });
 });
+
+describe("single-line override (issue #9: switch the line on single-line cards)", () => {
+  const site = [1, 2, 3];
+
+  it("is kept by normalization next to the multi-line rows", () => {
+    expect(normalizePingLineOverrides({ "0": 4, single: 5, bogus: 6 })).toEqual({ "0": 4, single: 5 });
+    expect(singleLineOverride({ single: 5 })).toBe(5);
+    expect(singleLineOverride(EMPTY_PING_LINE_OVERRIDES)).toBeUndefined();
+  });
+
+  it("does not shift the multi-line rows", () => {
+    expect(resolveNodePingLineTaskIds(site, { single: 5 })).toBe(site);
+  });
+
+  it("survives switching a multi-line row, and resets independently", () => {
+    const switched = switchPingLine(site, { single: 5 }, 0, 4);
+    expect(switched).toEqual({ "0": 4, single: 5 });
+    expect(withoutMultiLineOverrides(switched)).toEqual({ single: 5 });
+    expect(withSingleLineOverride(switched, null)).toEqual({ "0": 4 });
+    expect(withSingleLineOverride({ single: 5 }, null)).toBe(EMPTY_PING_LINE_OVERRIDES);
+  });
+
+  it("is synced to the site, the local choice winning over the stored one", () => {
+    expect(mergePingLineOverridesByNode(site, { a: { single: 4 } }, { a: { single: 6 }, b: { single: 7 } })).toEqual({
+      a: { single: 6 },
+      b: { single: 7 },
+    });
+    // 多线路的行全被换回默认，单线路那一项照样留着。
+    expect(mergePingLineOverridesByNode(site, EMPTY_PING_LINE_OVERRIDES_BY_NODE, { a: { "0": 1, single: 6 } })).toEqual({
+      a: { single: 6 },
+    });
+  });
+});
+

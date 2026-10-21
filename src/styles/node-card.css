@@ -506,6 +506,29 @@
   white-space: nowrap;
 }
 
+/* 单线路时跟在「延迟」后面的线路名（SingleLineName）：比标签淡一档，点开换线路；
+   悬停 / 展开变深、焦点框沿用上面 .multi-ping-name-trigger 那套。四种视图共用。 */
+.single-ping-line {
+  display: inline-flex;
+  min-width: 0;
+  align-items: center;
+  gap: 3px;
+  color: var(--text-tertiary);
+  font-weight: 560;
+  letter-spacing: 0;
+}
+
+.single-ping-sep {
+  flex: 0 0 auto;
+}
+
+.single-ping-name {
+  min-width: 0;
+  max-width: 9em;
+  color: inherit;
+  font: inherit;
+}
+
 .multi-ping-value {
   flex: 0 0 auto;
   font-size: 11.5px;

@@ -31,6 +31,36 @@ export function nodePingLineOverrides(
 
 const SLOT_KEY_PATTERN = /^(0|[1-9]\d*)$/;
 
+/**
+ * 单线路那一行（单线路模式的大卡 / 小卡，以及一直只画一条的迷你卡、列表）换的线路，和多线路的行号存在同一张表里：
+ * `{ "0": 3, "single": 4 }`。多线路的几行按行号叠在 `homepageMultiPingTaskIds` 上；这一项叠在
+ * 「逐节点指定线路 / 默认线路」算出来的那条上（站长 2026-10-21 要单线路也能点线路名换）。
+ */
+export const SINGLE_LINE_SLOT = "single";
+
+/** 这台节点换过的单线路；没换过返回 undefined。 */
+export function singleLineOverride(overrides: PingLineOverrides): number | undefined {
+  return Object.prototype.hasOwnProperty.call(overrides, SINGLE_LINE_SLOT)
+    ? overrides[SINGLE_LINE_SLOT]
+    : undefined;
+}
+
+/** 设置 / 去掉单线路那一项，多线路的行不动；传 null = 恢复默认。 */
+export function withSingleLineOverride(
+  overrides: PingLineOverrides,
+  taskId: number | null,
+): PingLineOverrides {
+  const next: Record<string, number> = { ...overrides };
+  delete next[SINGLE_LINE_SLOT];
+  if (taskId != null && isPositiveTaskId(taskId)) next[SINGLE_LINE_SLOT] = taskId;
+  return Object.keys(next).length > 0 ? next : EMPTY_PING_LINE_OVERRIDES;
+}
+
+/** 只留多线路的行（多线路菜单里「恢复默认」用，不连带清掉单线路那一项）。 */
+export function withoutMultiLineOverrides(overrides: PingLineOverrides): PingLineOverrides {
+  return withSingleLineOverride(EMPTY_PING_LINE_OVERRIDES, singleLineOverride(overrides) ?? null);
+}
+
 function isPositiveTaskId(value: unknown): value is number {
   return typeof value === "number" && Number.isSafeInteger(value) && value > 0;
 }
@@ -48,7 +78,10 @@ export function normalizePingLineOverrides(
   }
   const normalized: Record<string, number> = {};
   for (const [slot, taskId] of Object.entries(value)) {
-    if (!SLOT_KEY_PATTERN.test(slot) || Number(slot) >= HOMEPAGE_MULTI_PING_MAX_COUNT) {
+    if (
+      slot !== SINGLE_LINE_SLOT &&
+      (!SLOT_KEY_PATTERN.test(slot) || Number(slot) >= HOMEPAGE_MULTI_PING_MAX_COUNT)
+    ) {
       continue;
     }
     if (!isPositiveTaskId(taskId) || !isKnownTaskId(taskId)) continue;
@@ -109,6 +142,9 @@ export function switchPingLine(
   displayed.forEach((id, index) => {
     if (id !== siteTaskIds[index]) next[String(index)] = id;
   });
+  // 单线路那一项和多线路的行互不相干，换行时原样带上。
+  const single = singleLineOverride(overrides);
+  if (single != null) next[SINGLE_LINE_SLOT] = single;
   return Object.keys(next).length > 0 ? next : EMPTY_PING_LINE_OVERRIDES;
 }
 
@@ -151,15 +187,19 @@ export function mergePingLineOverridesByNode(
       resolveNodePingLineTaskIds(siteTaskIds, siteNode) === siteTaskIds
         ? EMPTY_PING_LINE_OVERRIDES
         : siteNode;
+    const localNode = nodePingLineOverrides(local, uuid);
     const node: Record<string, number> = {};
-    for (const [slot, taskId] of Object.entries({
-      ...base,
-      ...nodePingLineOverrides(local, uuid),
-    })) {
+    for (const [slot, taskId] of Object.entries({ ...base, ...localNode })) {
+      if (slot === SINGLE_LINE_SLOT) continue;
       const index = Number(slot);
       if (index < siteTaskIds.length && taskId !== siteTaskIds[index]) node[slot] = taskId;
     }
-    if (resolveNodePingLineTaskIds(siteTaskIds, node) !== siteTaskIds) merged[uuid] = node;
+    const multiChanged = resolveNodePingLineTaskIds(siteTaskIds, node) !== siteTaskIds;
+    if (!multiChanged) for (const slot of Object.keys(node)) delete node[slot];
+    // 单线路那一项本机的压过站点的；和「逐节点指定 / 默认线路」相同的在换线路时就删了，这里不用再比。
+    const single = singleLineOverride(localNode) ?? singleLineOverride(siteNode);
+    if (single != null) node[SINGLE_LINE_SLOT] = single;
+    if (Object.keys(node).length > 0) merged[uuid] = node;
   }
   return Object.keys(merged).length > 0 ? merged : EMPTY_PING_LINE_OVERRIDES_BY_NODE;
 }

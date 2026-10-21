@@ -252,6 +252,16 @@
   gap: 3px;
 }
 
+/* 当前延迟和线路名一行（单线路时看得出是哪条线路，issue #9）。 */
+.node-list-latency-head {
+  display: inline-flex;
+  max-width: 100%;
+  min-width: 0;
+  align-items: baseline;
+  gap: 3px;
+  font-size: 10.5px;
+}
+
 .node-list-latency-value {
   font-size: 12.5px;
   font-weight: 660;

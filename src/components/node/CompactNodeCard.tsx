@@ -26,6 +26,8 @@ import { formatBytes } from "@/utils/format";
 import { speedRateColor, speedRateColorFromBytes } from "@/utils/metricTone";
 import { supportsFineHover } from "@/utils/mediaQuery";
 import { formatHealthBucketTooltip } from "./pingBucketText";
+import { HealthBucketTooltip } from "./HealthBucketTooltip";
+import { SingleLineName } from "./PingLineSwitcher";
 import { resolveTouchBucketIndex, TOUCH_BUCKET_HOLD_MS } from "./touchBucketPick";
 import { MultiPingStatus } from "./MultiPingStatus";
 import {
@@ -214,10 +216,6 @@ function HealthBars({
   const activeIndex = hoveredIndex ?? selectedIndex;
   const activeBucket = activeIndex == null ? null : bars[activeIndex] ?? null;
   const activeTooltip = activeBucket ? formatHealthBucketTooltip(activeBucket, kind) : null;
-  const activeLeft =
-    activeIndex == null || bars.length === 0
-      ? "50%"
-      : `clamp(42px, ${((activeIndex + 0.5) / bars.length) * 100}%, calc(100% - 42px))`;
 
   const selectIndex = (next: number) => {
     if (bars.length === 0) return;
@@ -250,7 +248,6 @@ function HealthBars({
       ref={containerRef}
       className="compact-node-health-bars"
       data-kind={kind}
-      style={{ "--compact-health-tooltip-x": activeLeft } as CSSProperties}
       tabIndex={0}
       role="group"
       aria-label={t("compact.historyAria", {
@@ -285,11 +282,12 @@ function HealthBars({
         event.preventDefault();
       }}
     >
-      {activeTooltip && (
-        <span className="compact-node-health-tooltip" role="status">
-          {activeTooltip}
-        </span>
-      )}
+      <HealthBucketTooltip
+        text={activeTooltip}
+        index={activeIndex}
+        count={bars.length}
+        className="compact-node-health-tooltip"
+      />
       {bars.map((bucket, index) => {
         const slot = healthBarSlotModel(bucket, kind);
         const style = {
@@ -330,7 +328,7 @@ function CompactHealthItem({
   children,
 }: {
   icon: ReactNode;
-  label: string;
+  label: ReactNode;
   value: string;
   unit?: string;
   color: string;
@@ -645,6 +643,7 @@ function CompactTrafficBar({
 // ~60s 才刷新一次),所以在 ping 数据真正变化前,跳过重渲染 latency/loss HealthBars
 // 这棵子树 —— 它是每 tick DOM 开销的大头。
 const CompactNodeHealth = memo(function CompactNodeHealth({
+  uuid,
   ping,
   pingBuckets,
   latencyColor,
@@ -653,6 +652,7 @@ const CompactNodeHealth = memo(function CompactNodeHealth({
   pingLoading,
   pingError,
 }: {
+  uuid: string;
   ping: PingOverviewItem;
   pingBuckets: PingOverviewBucket[];
   latencyColor: string;
@@ -679,7 +679,12 @@ const CompactNodeHealth = memo(function CompactNodeHealth({
     >
       <CompactHealthItem
         icon={<Clock3 size={12} />}
-        label={t("card.latency")}
+        label={
+          <>
+            {t("card.latency")}
+            <SingleLineName uuid={uuid} />
+          </>
+        }
         value={ping.lastValue != null ? Math.round(ping.lastValue).toString() : emptyText}
         unit={ping.lastValue != null ? "ms" : undefined}
         color={latencyColor}
@@ -774,6 +779,7 @@ export const CompactNodeCard = memo(function CompactNodeCard({
         />
       ) : (
         <CompactNodeHealth
+          uuid={uuid}
           ping={ping}
           pingBuckets={pingBuckets}
           latencyColor={latencyColor}

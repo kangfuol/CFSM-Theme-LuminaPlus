@@ -546,7 +546,8 @@
 .node-health-hover-tooltip {
   position: absolute;
   bottom: calc(100% + 7px);
-  left: var(--node-health-tooltip-x, var(--compact-health-tooltip-x, 50%));
+  /* 横向位置由 HealthBucketTooltip 量完气泡宽度后写在行内样式里。 */
+  left: 50%;
   z-index: 2;
   width: max-content;
   max-width: 156px;
@@ -566,7 +567,8 @@
   content: "";
   position: absolute;
   top: 100%;
-  left: 50%;
+  /* 气泡贴边时整体挪开了，小尖角单独对准柱子。 */
+  left: var(--health-tooltip-arrow-x, 50%);
   transform: translate(-50%, -4px) rotate(45deg);
 }
 

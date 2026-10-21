@@ -13,6 +13,7 @@ import { speedRateColor } from "@/utils/metricTone";
 import { CanvasStrip, fillRoundedRect, safeCanvasColor } from "./CanvasStrip";
 import { LatencyBars } from "./LatencyBars";
 import { HealthBucketTooltip } from "./HealthBucketTooltip";
+import { SingleLineName } from "./PingLineSwitcher";
 import { formatOsLabel, joinTagTitle, nodeDetailLinkLabels } from "./nodeCardShared";
 import { formatHealthBucketTooltip } from "./pingBucketText";
 import type { PingOverviewTaskLoadState } from "@/types/cfsm";
@@ -170,6 +171,7 @@ function StackLine({
 
 // 网络列:当前延迟在上,聚合延迟柱状图在下(热力着色,与大卡同一视觉语言)。
 function ListLatency({
+  uuid,
   latency,
   loadState,
   hasRealHomepagePingBinding,
@@ -178,6 +180,7 @@ function ListLatency({
   buckets,
   redrawKey,
 }: {
+  uuid: string;
   latency: number | null;
   loadState: PingOverviewTaskLoadState | undefined;
   hasRealHomepagePingBinding: boolean;
@@ -204,13 +207,16 @@ function ListLatency({
       data-ping-state={state}
       aria-label={t("list.netLatencyAria", { status: status.ariaText })}
     >
-      <span
-        className="node-list-latency-value tabular"
-        style={{ color: latencyColor }}
-        title={status.title}
-      >
-        {status.visibleText}
-        {latency != null && <small>ms</small>}
+      <span className="node-list-latency-head">
+        <span
+          className="node-list-latency-value tabular"
+          style={{ color: latencyColor }}
+          title={status.title}
+        >
+          {status.visibleText}
+          {latency != null && <small>ms</small>}
+        </span>
+        <SingleLineName uuid={uuid} />
       </span>
       <span className="node-list-latency-bars">
         <LatencyBars
@@ -379,6 +385,7 @@ const NodeRow = memo(function NodeRow({ uuid }: { uuid: string }) {
 
       <div className="node-list-cell col-net">
         <ListLatency
+          uuid={uuid}
           latency={ping.lastValue}
           loadState={ping.loadState}
           hasRealHomepagePingBinding={hasRealHomepagePingBinding}
