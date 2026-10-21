@@ -540,6 +540,7 @@ export const es: Messages = {
   "settings.homeLatency": "Latencia en el inicio",
   "settings.largeCompactDisplay": "Tarjetas grandes / compactas",
   "settings.largeCompactHint": "Las tarjetas mini y la lista no tienen espacio para varias filas, así que siempre usan una sola línea. El backend tiene {n} líneas de sondeo fijas; las líneas sin destino no tienen datos.",
+  "settings.cardSwitchHint": "Haz clic en el nombre de una línea en una tarjeta del inicio para mostrar otra línea en ese nodo. Lo que elige un visitante se queda en su navegador; lo que elige el propietario con sesión iniciada se aplica a todos.",
   "settings.showTheseLines": "Mostrar estas líneas (en orden)",
   "settings.selectedLines": "{n} / {max} seleccionadas",
   "settings.lineSlot": "Línea {n}",

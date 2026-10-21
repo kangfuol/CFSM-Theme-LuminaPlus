@@ -2346,6 +2346,8 @@ export function ThemeManage() {
                       <span className="mt-1 block setting-hint">
                         {t("settings.largeCompactHint", { n: sortedTasks.length })}
                       </span>
+                      {/* 卡片上点线路名能换线路，设置页这里提一句，不然只有碰巧点到的人才知道（站长 2026-10-21）。 */}
+                      <span className="mt-1 block setting-hint">{t("settings.cardSwitchHint")}</span>
                     </div>
                     {/* 整行、等宽、强调色实心：这是本板块的总开关，得一眼看出选中的是哪种。 */}
                     <div className="instance-segmented is-prominent mt-3">

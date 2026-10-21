@@ -542,6 +542,7 @@ export const zh = {
   "settings.homeLatency": "主页延迟检测",
   "settings.largeCompactDisplay": "大卡片 / 小卡片显示",
   "settings.largeCompactHint": "迷你卡片与列表放不下多行，始终按单线路显示，不受这里影响。探测线路由后端固定，共 {n} 条；没配探测目标的线路没有数据。",
+  "settings.cardSwitchHint": "在首页卡片上点线路名，可以给这台节点单独换一条线路显示；访客换的只记在自己的浏览器里，登录站长换的会同步给所有访客。",
   "settings.showTheseLines": "显示这些线路（按顺序）",
   "settings.selectedLines": "已选 {n} / {max} 条",
   "settings.lineSlot": "线路 {n}",

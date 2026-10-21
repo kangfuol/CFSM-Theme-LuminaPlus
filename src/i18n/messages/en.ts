@@ -540,6 +540,7 @@ export const en: Messages = {
   "settings.homeLatency": "Home page latency",
   "settings.largeCompactDisplay": "Large / compact cards",
   "settings.largeCompactHint": "Mini cards and the list don't have room for several rows, so they always use a single line. The backend has {n} fixed probe lines; lines without a target have no data.",
+  "settings.cardSwitchHint": "Click a line name on a home card to show a different line for that node. A visitor's choice stays in their own browser; a signed-in owner's choice syncs to every visitor.",
   "settings.showTheseLines": "Show these lines (in order)",
   "settings.selectedLines": "{n} / {max} selected",
   "settings.lineSlot": "Line {n}",
