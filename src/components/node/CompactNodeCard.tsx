@@ -7,14 +7,12 @@ import {
   ArrowUp,
   Calendar,
   CircleDollarSign,
-  Clock3,
   Cpu,
   Database,
   Gauge,
   HardDrive,
   MemoryStick,
   Network,
-  Unplug,
 } from "lucide-react";
 import { clsx } from "clsx";
 import { Flag } from "@/components/ui/Flag";
@@ -320,14 +318,12 @@ function HealthBars({
 }
 
 function CompactHealthItem({
-  icon,
   label,
   value,
   unit,
   color,
   children,
 }: {
-  icon: ReactNode;
   label: ReactNode;
   value: string;
   unit?: string;
@@ -338,7 +334,6 @@ function CompactHealthItem({
     <div className="compact-node-health-item">
       <div className="compact-node-health-head">
         <span className="compact-node-health-label">
-          {icon}
           {label}
         </span>
         <strong className="compact-node-health-value tabular" style={{ color }}>
@@ -678,10 +673,9 @@ const CompactNodeHealth = memo(function CompactNodeHealth({
       }
     >
       <CompactHealthItem
-        icon={<Clock3 size={12} />}
         label={
           <>
-            {/* 只留图标和线路名，「延迟」「丢包」两个字不写（站长 2026-10-21），给读屏留着。 */}
+            {/* 只显示线路名，「延迟」「丢包」两个字和图标都不要（站长 2026-10-21），文字给读屏留着。 */}
             <span className="sr-only">{t("card.latency")}</span>
             <SingleLineName uuid={uuid} separator={false} />
           </>
@@ -693,7 +687,6 @@ const CompactNodeHealth = memo(function CompactNodeHealth({
         <HealthBars buckets={pingBuckets} kind="latency" />
       </CompactHealthItem>
       <CompactHealthItem
-        icon={<Unplug size={12} />}
         label={<span className="sr-only">{t("card.loss")}</span>}
         value={ping.loss != null ? ping.loss.toFixed(1) : emptyText}
         unit={ping.loss != null ? "%" : undefined}

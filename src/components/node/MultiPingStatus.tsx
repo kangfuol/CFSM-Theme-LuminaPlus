@@ -1,7 +1,6 @@
 import { t } from "@/i18n";
 import { memo, useState } from "react";
 import { clsx } from "clsx";
-import { Clock3, Unplug } from "lucide-react";
 import { useMetricColorsVersion } from "@/hooks/useMetricColors";
 import { usePreferences } from "@/hooks/usePreferences";
 import type { HomepagePingDisplayLine } from "@/types/cfsm";
@@ -58,7 +57,6 @@ const MultiPingMetricRow = memo(function MultiPingMetricRow({
     ? formatHealthBucketTooltip(hoveredBucket, metric)
     : null;
   const chartHeight = density === "compact" ? 9 : 11;
-  const iconSize = density === "compact" ? 12 : 13;
   const value = metric === "latency" ? line.lastValue : line.loss;
   const valueColor = metric === "latency" ? latencyColor : lossColor;
   const unit = metric === "latency" ? "ms" : "%";
@@ -81,18 +79,15 @@ const MultiPingMetricRow = memo(function MultiPingMetricRow({
         staleError ? t("multi.staleSuffix") : ""
       }`}
     >
-      <div className="multi-ping-metric-head">
-        {/* 和单线路卡片同一套图标：时钟 = 延迟、插头 = 丢包（站长 2026-10-21 要多线路也带上）。 */}
-        <span className="multi-ping-label">
-          {metric === "latency" ? (
-            <>
-              <Clock3 size={iconSize} strokeWidth={2} aria-hidden />
-              <PingLineSwitcher uuid={uuid} slot={slot} taskName={line.taskName} />
-            </>
-          ) : (
-            <Unplug size={iconSize} strokeWidth={2} aria-hidden />
-          )}
-        </span>
+      <div
+        className={clsx(
+          "multi-ping-metric-head",
+          metric === "loss" && "is-value-only",
+        )}
+      >
+        {metric === "latency" && (
+          <PingLineSwitcher uuid={uuid} slot={slot} taskName={line.taskName} />
+        )}
         <strong
           className="multi-ping-value tabular"
           style={{

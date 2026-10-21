@@ -9,8 +9,6 @@ import {
   Globe,
   ArrowDown,
   ArrowUp,
-  Clock3,
-  Unplug,
   Calendar,
   RefreshCw,
   CircleDollarSign,
@@ -465,8 +463,7 @@ const NodeHealthSection = memo(function NodeHealthSection({
       <div className="server-health-block">
         <div className="server-health-head">
           <div className="server-health-label">
-            <Clock3 size={13} strokeWidth={2} />
-            {/* 只留图标和线路名，「延迟」「丢包」两个字不写（站长 2026-10-21），给读屏留着。 */}
+            {/* 只显示线路名，「延迟」「丢包」两个字和图标都不要（站长 2026-10-21），文字给读屏留着。 */}
             <span className="sr-only">{t("card.latency")}</span>
             <SingleLineName uuid={uuid} separator={false} />
           </div>
@@ -511,7 +508,6 @@ const NodeHealthSection = memo(function NodeHealthSection({
       <div className="server-health-block">
         <div className="server-health-head">
           <div className="server-health-label">
-            <Unplug size={13} strokeWidth={2} />
             <span className="sr-only">{t("card.lossRate")}</span>
           </div>
           <span
