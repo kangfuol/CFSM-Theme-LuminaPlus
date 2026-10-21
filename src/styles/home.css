@@ -678,6 +678,28 @@
     box-shadow 160ms ease;
 }
 
+/* 分组标签也能拖动排序（「全部」除外）：长按不要弹系统菜单、不要选中文字；拖动中的那个浮在上面。 */
+.home-group-tab-draggable {
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
+  user-select: none;
+}
+
+.home-group-tabs[data-reordering="true"],
+.home-group-tabs[data-reordering="true"] button {
+  cursor: grabbing;
+}
+
+.home-group-tabs button[data-dragging="true"] {
+  position: relative;
+  z-index: 2;
+  border-color: color-mix(in srgb, var(--border-strong) 70%, transparent);
+  background: var(--surface-elev);
+  color: var(--text-primary);
+  box-shadow: 0 14px 28px -14px rgba(0, 0, 0, 0.45);
+  will-change: transform;
+}
+
 .home-group-tabs button:hover {
   color: var(--text-primary);
   background: color-mix(in srgb, var(--hover-bg-a) 72%, transparent);
@@ -925,6 +947,11 @@
   grid-column: -2 / -1;
   justify-self: end;
   align-self: center;
+}
+
+/* 分组栏伸展成整行时（NodeGrid 的 GroupTabs 量出来放不下一格才加），排序按钮钉回同一行的右端。 */
+.home-controls-bar[data-groups-span="true"] .home-sort {
+  grid-row: 1;
 }
 
 .home-sort-trigger {
