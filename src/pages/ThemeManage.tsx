@@ -17,7 +17,6 @@ import {
   Coins,
   ArrowUpDown,
   ChevronDown,
-  ChevronUp,
   CircleDollarSign,
   ClipboardCheck,
   ClipboardCopy,
@@ -203,7 +202,7 @@ function summarizeNodes(
   uuids: string[],
   clientsById: Map<string, NodeInfo>,
 ) {
-  if (uuids.length === 0) return t("settings.nodesEmptyHint");
+  if (uuids.length === 0) return "";
   const names = uuids.map((uuid) => clientsById.get(uuid)?.name || uuid);
   const summary = names.join(t("settings.listJoiner"));
   return summary.length > 92 ? `${summary.slice(0, 92)}...` : summary;
@@ -436,7 +435,8 @@ const ToggleRow = memo(function ToggleRow({
 }: {
   field: BooleanDraftKey;
   title: string;
-  desc: string;
+  /** 只在说得出标题之外的信息时才写（站长 2026-10-23：别把标题换个说法再说一遍）。 */
+  desc?: string;
   checked: boolean;
   onPatch: (key: BooleanDraftKey, value: boolean) => void;
 }) {
@@ -444,7 +444,7 @@ const ToggleRow = memo(function ToggleRow({
     <label className="surface-inset flex items-center justify-between gap-3 px-4 py-3">
       <span className="min-w-0">
         <span className="block setting-subhead-title">{title}</span>
-        <span className="mt-1 block setting-hint">{desc}</span>
+        {desc && <span className="mt-1 block setting-hint">{desc}</span>}
       </span>
       <input
         type="checkbox"
@@ -531,9 +531,16 @@ const TaskBindingSection = memo(function TaskBindingSection({
   const allVisibleSelectableAssigned =
     selectableVisibleClients.length > 0 &&
     selectableVisibleClients.every((client) => assigned.includes(client.uuid));
+  // 没节点的线路压成一行（站长 2026-10-23：八条线路每张都写两行「还没有节点…」，整组两屏多）。
+  const isEmpty = existingAssigned.length === 0;
   return (
-    <section className="surface-inset px-4 py-4">
-      <div className="flex flex-wrap items-start justify-between gap-3">
+    <section className={clsx("surface-inset px-4", isEmpty ? "py-2.5" : "py-4")}>
+      <div
+        className={clsx(
+          "flex flex-wrap justify-between gap-3",
+          isEmpty ? "items-center" : "items-start",
+        )}
+      >
         <div className="min-w-0 flex-1">
           <div className="flex flex-wrap items-center gap-2">
             <h3 className="text-[15px] font-semibold text-[var(--text-primary)]">
@@ -544,23 +551,30 @@ const TaskBindingSection = memo(function TaskBindingSection({
                 {t("settings.defaultLineBadge")}
               </span>
             )}
-          </div>
-          <div className="mt-2 text-[12px] text-[var(--text-secondary)]">
-            <span className="font-medium text-[var(--text-primary)]">
-              {existingAssigned.length > 0
-                ? t("settings.lineShownOn", { n: existingAssigned.length })
-                : t("settings.lineUnused")}
-            </span>
-            {isDefaultTask && (
-              <>
-                <span className="mx-2 text-[var(--text-tertiary)]">·</span>
-                <span>{t("settings.lineDefaultNote")}</span>
-              </>
+            {isEmpty && (
+              <span className="text-[12px] text-[var(--text-tertiary)]">
+                {isDefaultTask ? t("settings.lineDefaultNote") : t("settings.lineUnused")}
+              </span>
             )}
           </div>
-          <p className="mt-2 text-[12px] text-[var(--text-tertiary)]" title={assignedSummary}>
-            {assignedSummary}
-          </p>
+          {!isEmpty && (
+            <>
+              <div className="mt-2 text-[12px] text-[var(--text-secondary)]">
+                <span className="font-medium text-[var(--text-primary)]">
+                  {t("settings.lineShownOn", { n: existingAssigned.length })}
+                </span>
+                {isDefaultTask && (
+                  <>
+                    <span className="mx-2 text-[var(--text-tertiary)]">·</span>
+                    <span>{t("settings.lineDefaultNote")}</span>
+                  </>
+                )}
+              </div>
+              <p className="mt-2 text-[12px] text-[var(--text-tertiary)]" title={assignedSummary}>
+                {assignedSummary}
+              </p>
+            </>
+          )}
         </div>
 
         <div className="flex items-center gap-2">
@@ -1144,8 +1158,7 @@ export function ThemeManage() {
     [sortedClients],
   );
 
-  // 后端实际存在的分组,按首页 Tab 的渲染顺序排列(已配置的在前,未排序的在后)。
-  // 用户直接拖动这个列表来调整顺序。
+  // 后端实际存在的分组，按首页 Tab 的渲染顺序排列（已配置的在前，未排序的在后），只用来展示。
   const availableGroups = useMemo(
     () => dedupeGroupLabels(sortedClients.map((client) => client.group)),
     [sortedClients],
@@ -1154,13 +1167,6 @@ export function ThemeManage() {
     () => sortHomeGroupOptions(availableGroups, draft.homeGroupOrder),
     [availableGroups, draft.homeGroupOrder],
   );
-  const moveGroup = (index: number, direction: -1 | 1) => {
-    const target = index + direction;
-    if (target < 0 || target >= orderedDraftGroups.length) return;
-    const next = [...orderedDraftGroups];
-    [next[index], next[target]] = [next[target], next[index]];
-    patch("homeGroupOrder", next);
-  };
 
   const filteredTasks = useMemo(() => {
     const keyword = taskSearch.trim().toLowerCase();
@@ -1721,28 +1727,24 @@ export function ThemeManage() {
                   <ToggleRow
                     field="quickShowAppearance"
                     title={t("settings.quickAppearance")}
-                    desc={t("settings.quickAppearanceDesc")}
                     checked={draft.quickShowAppearance}
                     onPatch={patch}
                   />
                   <ToggleRow
                     field="quickShowViewMode"
                     title={t("settings.quickViewMode")}
-                    desc={t("settings.quickViewModeDesc")}
                     checked={draft.quickShowViewMode}
                     onPatch={patch}
                   />
                   <ToggleRow
                     field="quickShowColors"
                     title={t("settings.quickColors")}
-                    desc={t("settings.quickColorsDesc")}
                     checked={draft.quickShowColors}
                     onPatch={patch}
                   />
                   <ToggleRow
                     field="enableAdminButton"
                     title={t("settings.quickAdmin")}
-                    desc={t("settings.quickAdminDesc")}
                     checked={draft.enableAdminButton}
                     onPatch={patch}
                   />
@@ -1803,11 +1805,10 @@ export function ThemeManage() {
                 title={t("settings.homeDisplay")}
                 aside={<ListFilter size={16} />}
               >
-                <div className="grid gap-3 md:grid-cols-3">
+                <div className="grid gap-3 md:grid-cols-2">
                   <ToggleRow
                     field="showHomeOverview"
                     title={t("settings.showOverview")}
-                    desc={t("settings.showOverviewDesc")}
                     checked={draft.showHomeOverview}
                     onPatch={patch}
                   />
@@ -1821,33 +1822,16 @@ export function ThemeManage() {
                   <ToggleRow
                     field="showGroupTabs"
                     title={t("settings.showGroupTabs")}
-                    desc={t("settings.showGroupTabsDesc")}
                     checked={draft.showGroupTabs}
                     onPatch={patch}
                   />
                   <ToggleRow
                     field="showRegionBar"
                     title={t("settings.showRegionTabs")}
-                    desc={t("settings.showRegionTabsDesc")}
                     checked={draft.showRegionBar}
                     onPatch={patch}
                   />
-                  <ToggleRow
-                    field="showCardGroup"
-                    title={t("settings.showCardGroup")}
-                    desc={t("settings.showCardGroupDesc")}
-                    checked={draft.showCardGroup}
-                    onPatch={patch}
-                  />
-                  <ToggleRow
-                    field="showCardPrice"
-                    title={t("settings.showCardPrice")}
-                    desc={t("settings.showCardPriceDesc")}
-                    checked={draft.showCardPrice}
-                    onPatch={patch}
-                  />
                 </div>
-
               </InstancePanel>
 
               <InstancePanel
@@ -1961,6 +1945,7 @@ export function ThemeManage() {
                   {t("settings.sortHint")}
                 </p>
 
+                {/* 分组顺序和地区一样在首页直接拖（v1.2.22 起分组栏也能拖）；这里只留查看和恢复默认。 */}
                 <div className="mt-4">
                   <div className="setting-subhead">
                     <span className="setting-subhead-title">{t("settings.groupOrder")}</span>
@@ -1968,52 +1953,26 @@ export function ThemeManage() {
                       {t("settings.groupOrderHint")}
                     </span>
                   </div>
-                  {orderedDraftGroups.length === 0 ? (
-                    <p className="surface-inset mt-2 px-4 py-3 text-[12px] text-[var(--text-tertiary)]">
-                      {clientsLoading ? t("settings.groupsLoading") : t("settings.groupsEmpty")}
-                    </p>
-                  ) : (
-                    <ul className="mt-2 flex flex-col gap-2">
-                      {orderedDraftGroups.map((group, index) => (
-                        <li
-                          key={group}
-                          className="surface-inset flex items-center justify-between gap-3 px-4 py-2.5"
-                        >
-                          <span className="flex min-w-0 items-center gap-2">
-                            <span className="tabular text-[12px] text-[var(--text-tertiary)]">
-                              {index + 1}
-                            </span>
-                            <span
-                              className="truncate text-[13px] text-[var(--text-primary)]"
-                              title={group}
-                            >
-                              {group}
-                            </span>
-                          </span>
-                          <span className="flex shrink-0 items-center gap-1">
-                            <button
-                              type="button"
-                              disabled={index === 0}
-                              onClick={() => moveGroup(index, -1)}
-                              className="theme-manage-button is-compact"
-                              aria-label={t("settings.moveUp", { group })}
-                            >
-                              <ChevronUp size={14} />
-                            </button>
-                            <button
-                              type="button"
-                              disabled={index === orderedDraftGroups.length - 1}
-                              onClick={() => moveGroup(index, 1)}
-                              className="theme-manage-button is-compact"
-                              aria-label={t("settings.moveDown", { group })}
-                            >
-                              <ChevronDown size={14} />
-                            </button>
-                          </span>
-                        </li>
-                      ))}
-                    </ul>
-                  )}
+                  <div className="surface-inset mt-2 flex items-center justify-between gap-3 px-4 py-2.5">
+                    <span
+                      className="truncate text-[13px] text-[var(--text-primary)]"
+                      title={orderedDraftGroups.join(" → ")}
+                    >
+                      {orderedDraftGroups.length > 0
+                        ? orderedDraftGroups.join(" → ")
+                        : clientsLoading
+                          ? t("settings.groupsLoading")
+                          : t("settings.groupsEmpty")}
+                    </span>
+                    <button
+                      type="button"
+                      disabled={draft.homeGroupOrder.length === 0}
+                      onClick={() => patch("homeGroupOrder", [])}
+                      className="theme-manage-button is-compact shrink-0"
+                    >
+                      {t("switcher.reset")}
+                    </button>
+                  </div>
                 </div>
 
                 {/* 地区顺序在首页地区栏上直接拖（站长提的：拖比在这里上下点直观）；这里只留查看和恢复默认。 */}
@@ -2139,11 +2098,22 @@ export function ThemeManage() {
                 <div>
                   <div className="setting-subhead">
                     <span className="setting-subhead-title">{t("settings.crossView")}</span>
-                    <span className="setting-hint">
-                      {t("settings.crossViewHint")}
-                    </span>
                   </div>
                   <div className="mt-2 grid gap-3 md:grid-cols-2">
+                    <ToggleRow
+                      field="showCardGroup"
+                      title={t("settings.showCardGroup")}
+                      desc={t("settings.showCardGroupDesc")}
+                      checked={draft.showCardGroup}
+                      onPatch={patch}
+                    />
+                    <ToggleRow
+                      field="showCardPrice"
+                      title={t("settings.showCardPrice")}
+                      desc={t("settings.showCardPriceDesc")}
+                      checked={draft.showCardPrice}
+                      onPatch={patch}
+                    />
                     <ToggleRow
                       field="showConnections"
                       title={t("settings.showConnections")}
@@ -2157,9 +2127,6 @@ export function ThemeManage() {
                 <div className="mt-4">
                   <div className="setting-subhead">
                     <span className="setting-subhead-title">{t("settings.compactOnly")}</span>
-                    <span className="setting-hint">
-                      {t("settings.compactOnlyHint")}
-                    </span>
                   </div>
                   <div className="mt-2 grid gap-3 md:grid-cols-2">
                     <ToggleRow
