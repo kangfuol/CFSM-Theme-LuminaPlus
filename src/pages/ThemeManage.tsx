@@ -1815,7 +1815,6 @@ export function ThemeManage() {
                   <ToggleRow
                     field="showAssetOverview"
                     title={t("settings.showAssetOverview")}
-                    desc={t("settings.showAssetOverviewDesc")}
                     checked={draft.showAssetOverview}
                     onPatch={patch}
                   />
@@ -2103,21 +2102,18 @@ export function ThemeManage() {
                     <ToggleRow
                       field="showCardGroup"
                       title={t("settings.showCardGroup")}
-                      desc={t("settings.showCardGroupDesc")}
                       checked={draft.showCardGroup}
                       onPatch={patch}
                     />
                     <ToggleRow
                       field="showCardPrice"
                       title={t("settings.showCardPrice")}
-                      desc={t("settings.showCardPriceDesc")}
                       checked={draft.showCardPrice}
                       onPatch={patch}
                     />
                     <ToggleRow
                       field="showConnections"
                       title={t("settings.showConnections")}
-                      desc={t("settings.showConnectionsDesc")}
                       checked={draft.showConnections}
                       onPatch={patch}
                     />
@@ -2132,21 +2128,18 @@ export function ThemeManage() {
                     <ToggleRow
                       field="compactShowTrafficTotal"
                       title={t("settings.showTrafficTotal")}
-                      desc={t("settings.showTrafficTotalDesc")}
                       checked={draft.compactShowTrafficTotal}
                       onPatch={patch}
                     />
                     <ToggleRow
                       field="compactShowBilling"
                       title={t("settings.showBilling")}
-                      desc={t("settings.showBillingDesc")}
                       checked={draft.compactShowBilling}
                       onPatch={patch}
                     />
                     <ToggleRow
                       field="compactShowUptime"
                       title={t("settings.showUptime")}
-                      desc={t("settings.showUptimeDesc")}
                       checked={draft.compactShowUptime}
                       onPatch={patch}
                     />
@@ -2168,7 +2161,6 @@ export function ThemeManage() {
                 <ToggleRow
                   field="showCostSummary"
                   title={t("settings.showCostSummary")}
-                  desc={t("settings.showCostSummaryDesc")}
                   checked={draft.showCostSummary}
                   onPatch={patch}
                 />
