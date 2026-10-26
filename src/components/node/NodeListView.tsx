@@ -19,7 +19,6 @@ import { formatHealthBucketTooltip } from "./pingBucketText";
 import type { PingOverviewTaskLoadState } from "@/types/cfsm";
 import { HOMEPAGE_PING_BUCKET_COUNT } from "@/hooks/usePingOverview";
 
-const GAUGE_SEGMENTS = 14;
 
 
 function clamp01(value: number) {
@@ -98,11 +97,10 @@ export function formatListPingStatus(
   }
 }
 
-// 细 canvas 分段条 + 百分比,与大卡 MetricBar 同一视觉语言,但压成一格(数值在上、细条在下)。
+// 细 canvas 连续进度条 + 百分比,与大卡 MetricBar 同一视觉语言,但压成一格(数值在上、细条在下)。
 function ListGauge({
   value,
   fraction,
-  paint,
   redrawKey,
   unit = "%",
 }: {
@@ -112,28 +110,31 @@ function ListGauge({
   redrawKey: string;
   unit?: string;
 }) {
-  const activeSegments = clamp01(fraction) * GAUGE_SEGMENTS;
+  const clamped = clamp01(fraction);
   const draw = useCallback(
     (ctx: CanvasRenderingContext2D, width: number, height: number) => {
+      const radius = height / 2;
       const inactive = safeCanvasColor("var(--progress-bg)");
-      const active = safeCanvasColor(paint);
-      const gap = 2;
-      const segWidth = Math.max(1, (width - gap * (GAUGE_SEGMENTS - 1)) / GAUGE_SEGMENTS);
-      for (let i = 0; i < GAUGE_SEGMENTS; i += 1) {
-        const x = i * (segWidth + gap);
-        const fill = Math.max(0, Math.min(1, activeSegments - i));
-        ctx.globalAlpha = 0.55;
-        ctx.fillStyle = inactive;
-        fillRoundedRect(ctx, x, 0, segWidth, height, 2);
-        if (fill > 0) {
-          ctx.globalAlpha = 0.42 + fill * 0.56;
-          ctx.fillStyle = active;
-          fillRoundedRect(ctx, x, 0, segWidth, height, 2);
-        }
+
+      ctx.globalAlpha = 0.58;
+      ctx.fillStyle = inactive;
+      fillRoundedRect(ctx, 0, 0, width, height, radius);
+
+      if (clamped > 0) {
+        const fillWidth = Math.max(height, width * clamped);
+        const gradient = ctx.createLinearGradient(0, 0, width, 0);
+        gradient.addColorStop(0, "#22c55e");
+        gradient.addColorStop(0.65, "#f59e0b");
+        gradient.addColorStop(1, "#ef4444");
+
+        ctx.globalAlpha = 1;
+        ctx.fillStyle = gradient;
+        fillRoundedRect(ctx, 0, 0, fillWidth, height, radius);
       }
+
       ctx.globalAlpha = 1;
     },
-    [activeSegments, paint],
+    [clamped],
   );
   return (
     <div className="node-list-gauge">
