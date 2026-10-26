@@ -215,6 +215,27 @@
   );
 }
 
+/* 迷你卡资源条:去掉分段,改成连续进度条;填充按位置着色(低绿 → 高红) */
+.mini-metric-track {
+  border-radius: 999px;
+  background:
+    linear-gradient(
+      to right,
+      transparent 0,
+      transparent var(--mini-metric-fill, 0%),
+      var(--progress-bg) var(--mini-metric-fill, 0%),
+      var(--progress-bg) 100%
+    ),
+    var(
+      --traffic-heat-spectrum,
+      linear-gradient(to right, #22c55e 0%, #f59e0b 65%, #ef4444 100%)
+    );
+}
+
+.mini-metric-track::after {
+  content: none;
+}
+
 /* Mini 遥测带：左侧实时上下行，右侧累计上下行。 */
 .mini-node-flow {
   display: grid;
