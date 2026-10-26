@@ -1,8 +1,6 @@
 import { useCallback, type ReactNode } from "react";
 import { CanvasStrip, fillRoundedRect, safeCanvasColor } from "./CanvasStrip";
 
-const METRIC_SEGMENT_COUNT = 18;
-
 interface MetricBarProps {
   icon: ReactNode;
   label: string;
@@ -22,42 +20,35 @@ export function MetricBar({
   detailText,
   fraction,
   redrawKey,
-  paint,
 }: MetricBarProps) {
   const clamped = Math.max(0, Math.min(1, fraction));
-  const activeSegments = clamped * METRIC_SEGMENT_COUNT;
 
-  // 除非填充比例或配色真正变化,否则跨渲染保持稳定,这样 CanvasStrip 的重绘 effect
-  // 不会在父组件每个 metrics tick 都触发。
+  // 连续进度条:先画整条底槽,再画按位置着色(绿 → 橙 → 红)的填充。
+  // 渐变铺满整条宽度,填充只露出左边已用的那一段,所以占用越高,末端越红。
   const draw = useCallback(
     (ctx: CanvasRenderingContext2D, width: number, height: number) => {
+      const radius = height / 2;
       const inactiveColor = safeCanvasColor("var(--progress-bg)");
-      const gap = 2;
-      const segmentWidth = Math.max(
-        1,
-        (width - gap * (METRIC_SEGMENT_COUNT - 1)) / METRIC_SEGMENT_COUNT,
-      );
-      const activePaint = safeCanvasColor(paint);
 
-      for (let index = 0; index < METRIC_SEGMENT_COUNT; index += 1) {
-        const x = index * (segmentWidth + gap);
-        const fillLevel = Math.max(0, Math.min(1, activeSegments - index));
-        const isActive = fillLevel > 0;
+      ctx.globalAlpha = 0.58;
+      ctx.fillStyle = inactiveColor;
+      fillRoundedRect(ctx, 0, 0, width, height, radius);
 
-        ctx.globalAlpha = 0.58;
-        ctx.fillStyle = inactiveColor;
-        fillRoundedRect(ctx, x, 0, segmentWidth, height, 2);
+      if (clamped > 0) {
+        const fillWidth = Math.max(height, width * clamped);
+        const gradient = ctx.createLinearGradient(0, 0, width, 0);
+        gradient.addColorStop(0, "#22c55e");
+        gradient.addColorStop(0.65, "#f59e0b");
+        gradient.addColorStop(1, "#ef4444");
 
-        if (isActive) {
-          ctx.globalAlpha = 0.42 + fillLevel * 0.56;
-          ctx.fillStyle = activePaint;
-          fillRoundedRect(ctx, x, 0, segmentWidth, height, 2);
-        }
+        ctx.globalAlpha = 1;
+        ctx.fillStyle = gradient;
+        fillRoundedRect(ctx, 0, 0, fillWidth, height, radius);
       }
 
       ctx.globalAlpha = 1;
     },
-    [activeSegments, paint],
+    [clamped],
   );
 
   return (
